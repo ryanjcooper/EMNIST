@@ -1,7 +1,7 @@
 EMNIST
 =====
 
-![](https://github.com/Coopss/EMNIST/static/preview.gif)
+![](https://raw.githubusercontent.com/Coopss/EMNIST/master/static/preview.gif)
 
 Developed by @coopss
 
@@ -35,7 +35,7 @@ This project was intended to explore the properties of convolution neural networ
   * Scipy
 
 ## Usage
-#### [training.py](https://github.com/Coopss/EMNIST/training.py)
+#### [training.py](https://github.com/Coopss/EMNIST/blob/master/training.py)
 A training program for classifying the EMNIST dataset
 
     usage: training.py [-h] --file [--width WIDTH] [--height HEIGHT] [--max MAX] [--epochs EPOCHS] [--verbose]
@@ -53,8 +53,8 @@ A training program for classifying the EMNIST dataset
     --epochs EPOCHS       Number of epochs to train on
     --verbose         Enables verbose printing
 
-#### [server.py](https://github.com/Coopss/EMNIST/server.py)
-A webapp for testing models generated from [training.py](https://github.com/Coopss/EMNIST/training.py) on the EMNIST dataset
+#### [server.py](https://github.com/Coopss/EMNIST/blob/master/server.py)
+A webapp for testing models generated from [training.py](https://github.com/Coopss/EMNIST/blob/master/training.py) on the EMNIST dataset
 
     usage: server.py [-h] [--bin BIN] [--host HOST] [--port PORT]
 
