@@ -181,5 +181,9 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', default=False, help='Enables verbose printing')
     args = parser.parse_args()
 
+    bin_dir = os.path.dirname(os.path.realpath(__file__)) + '/bin'
+    if not os.path.exists(bin_dir):
+        os.makedirs(bin_dir)
+
     training_data = load_data(args.file, width=args.width, height=args.height, max_=args.max, verbose=args.verbose)
     model = build_net(training_data, width=args.width, height=args.height, epochs=args.epochs, verbose=args.verbose)
