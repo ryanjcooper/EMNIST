@@ -15,7 +15,7 @@ This project was intended to explore the properties of convolution neural networ
     * Touch screen compatible
     * Works best when letter takes up a good portion of the canvas
   * Read in .mat file
-  * Currently training on the byclass dataset
+  * Currently training on the [byclass dataset](https://cloudstor.aarnet.edu.au/plus/index.php/s/7YXcasTXp727EqB/download) (*direct download link*)
     * See [paper](https://arxiv.org/abs/1702.05373 "EMNIST: an extension of MNIST to handwritten letters") for more info
 
 ##### Todo
