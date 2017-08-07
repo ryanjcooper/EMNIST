@@ -51,7 +51,7 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
         return render
 
     # Load convoluted list structure form loadmat
-    mat = loadmat(args.file)
+    mat = loadmat(mat_file_path)
 
     # Load char mapping
     mapping = {kv[0]:kv[1:][0] for kv in mat['dataset'][0][0][2]}
