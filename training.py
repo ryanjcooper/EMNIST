@@ -97,9 +97,11 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     training_images /= 255
     testing_images /= 255
 
-    return ((training_images, training_labels), (testing_images, testing_labels), mapping)
+    nb_classes = len(mapping)
 
-def build_net(training_data, width=28, height=28, epochs=10, verbose=False):
+    return ((training_images, training_labels), (testing_images, testing_labels), mapping, nb_classes)
+
+def build_net(training_data, width=28, height=28, verbose=False):
     ''' Build and train neural network. Also offloads the net in .yaml and the
         weights in .h5 to the bin/.
 
@@ -113,19 +115,13 @@ def build_net(training_data, width=28, height=28, epochs=10, verbose=False):
             verbose: enable verbose printing
     '''
     # Initialize data
-    (x_train, y_train), (x_test, y_test), mapping = training_data
+    (x_train, y_train), (x_test, y_test), mapping, nb_classes = training_data
     input_shape = (height, width, 1)
-    nb_classes = len(mapping)
 
     # Hyperparameters
-    batch_size = 256
     nb_filters = 32 # number of convolutional filters to use
     pool_size = (2, 2) # size of pooling area for max pooling
     kernel_size = (3, 3) # convolution kernel size
-
-    # convert class vectors to binary class matrices
-    y_train = np_utils.to_categorical(y_train, nb_classes)
-    y_test = np_utils.to_categorical(y_test, nb_classes)
 
     model = Sequential()
     model.add(Convolution2D(nb_filters,
@@ -150,16 +146,25 @@ def build_net(training_data, width=28, height=28, epochs=10, verbose=False):
                   metrics=['accuracy'])
 
     if verbose == True: print(model.summary())
+    return model
 
-    # Callback for analysis in TensorBoard
-    tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
+def train(model, training_data, callback=True, batch_size=256, epochs=10):
+    (x_train, y_train), (x_test, y_test), mapping, nb_classes = training_data
+
+    # convert class vectors to binary class matrices
+    y_train = np_utils.to_categorical(y_train, nb_classes)
+    y_test = np_utils.to_categorical(y_test, nb_classes)
+
+    if callback == True:
+        # Callback for analysis in TensorBoard
+        tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
               verbose=1,
               validation_data=(x_test, y_test),
-              callbacks=[tbCallBack])
+              callbacks=[tbCallBack if callback == True else None])
 
     score = model.evaluate(x_test, y_test, verbose=0)
     print('Test score:', score[0])
@@ -186,4 +191,5 @@ if __name__ == '__main__':
         os.makedirs(bin_dir)
 
     training_data = load_data(args.file, width=args.width, height=args.height, max_=args.max, verbose=args.verbose)
-    model = build_net(training_data, width=args.width, height=args.height, epochs=args.epochs, verbose=args.verbose)
+    model = build_net(training_data, width=args.width, height=args.height, verbose=args.verbose)
+    train(model, training_data, epochs=args.epochs)
