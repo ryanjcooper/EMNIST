@@ -164,7 +164,7 @@ def train(model, training_data, callback=True, batch_size=256, epochs=10):
               epochs=epochs,
               verbose=1,
               validation_data=(x_test, y_test),
-              callbacks=[tbCallBack if callback == True else None])
+              callbacks=[tbCallBack] if callback else None)
 
     score = model.evaluate(x_test, y_test, verbose=0)
     print('Test score:', score[0])
