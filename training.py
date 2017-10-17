@@ -67,7 +67,7 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     if verbose == True: _len = len(testing_images)
     for i in range(len(testing_images)):
         if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1) / _len) * 100), end='\r')
-        testing_images[i] = reshape(testing_images[i])
+        testing_images[i] = reshape(testing_images[i], width, height)
     if verbose == True: print('')
 
     # Extend the arrays to (None, 28, 28, 1)
