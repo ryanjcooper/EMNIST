@@ -1,61 +1,46 @@
 # Mute tensorflow debugging information console
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from keras.layers import Conv2D, MaxPooling2D, Convolution2D, Dropout, Dense, Flatten, LSTM
+from keras.layers import MaxPooling2D, Convolution2D, Dropout, Dense, Flatten
 from keras.models import Sequential, save_model
 from keras.utils import np_utils
 from scipy.io import loadmat
 import pickle
 import argparse
 import keras
-import numpy as np
+
+
+def reshape(img, width, height):
+    # Used to rotate images (for some reason they are transposed on read-in)
+    img.shape = (width, height)
+    img = img.T
+    img = list(img)
+    img = [item for sublist in img for item in sublist]
+    return img
+
+
+def display(img, threshold=0.5):
+    # Debugging only
+    render = ''
+    for row in img:
+        for col in row:
+            if col > threshold:
+                render += '@'
+            else:
+                render += '.'
+        render += '\n'
+    return render
+
 
 def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
-    ''' Load data in from .mat file as specified by the paper.
-
-        Arguments:
-            mat_file_path: path to the .mat, should be in sample/
-
-        Optional Arguments:
-            width: specified width
-            height: specified height
-            max_: the max number of samples to load
-            verbose: enable verbose printing
-
-        Returns:
-            A tuple of training and test data, and the mapping for class code to ascii value,
-            in the following format:
-                - ((training_images, training_labels), (testing_images, testing_labels), mapping)
-
-    '''
-    # Local functions
-    def reshape(img):
-        # Used to rotate images (for some reason they are transposed on read-in)
-        img.shape = (width,height)
-        img = img.T
-        img = list(img)
-        img = [item for sublist in img for item in sublist]
-        return img
-
-    def display(img, threshold=0.5):
-        # Debugging only
-        render = ''
-        for row in img:
-            for col in row:
-                if col > threshold:
-                    render += '@'
-                else:
-                    render += '.'
-            render += '\n'
-        return render
-
-    # Load convoluted list structure form loadmat
+    # Load .mat dataset
     mat = loadmat(mat_file_path)
 
-    # Load char mapping
-    mapping = {kv[0]:kv[1:][0] for kv in mat['dataset'][0][0][2]}
-    pickle.dump(mapping, open('bin/mapping.p', 'wb' ))
+    # Load character mapping
+    mapping = {kv[0]: kv[1:][0] for kv in mat['dataset'][0][0][2]}
+    pickle.dump(mapping, open('bin/mapping.p', 'wb'))
 
     # Load training data
     if max_ == None:
@@ -74,14 +59,14 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     # Reshape training data to be valid
     if verbose == True: _len = len(training_images)
     for i in range(len(training_images)):
-        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1)/_len) * 100), end='\r')
-        training_images[i] = reshape(training_images[i])
+        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1) / _len) * 100), end='\r')
+        training_images[i] = reshape(training_images[i], width, height)
     if verbose == True: print('')
 
     # Reshape testing data to be valid
     if verbose == True: _len = len(testing_images)
     for i in range(len(testing_images)):
-        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1)/_len) * 100), end='\r')
+        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1) / _len) * 100), end='\r')
         testing_images[i] = reshape(testing_images[i])
     if verbose == True: print('')
 
@@ -101,27 +86,16 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
 
     return ((training_images, training_labels), (testing_images, testing_labels), mapping, nb_classes)
 
+
 def build_net(training_data, width=28, height=28, verbose=False):
-    ''' Build and train neural network. Also offloads the net in .yaml and the
-        weights in .h5 to the bin/.
-
-        Arguments:
-            training_data: the packed tuple from load_data()
-
-        Optional Arguments:
-            width: specified width
-            height: specified height
-            epochs: the number of epochs to train over
-            verbose: enable verbose printing
-    '''
     # Initialize data
     (x_train, y_train), (x_test, y_test), mapping, nb_classes = training_data
     input_shape = (height, width, 1)
 
     # Hyperparameters
-    nb_filters = 32 # number of convolutional filters to use
-    pool_size = (2, 2) # size of pooling area for max pooling
-    kernel_size = (3, 3) # convolution kernel size
+    nb_filters = 32  # number of convolutional filters to use
+    pool_size = (2, 2)  # size of pooling area for max pooling
+    kernel_size = (3, 3)  # convolution kernel size
 
     model = Sequential()
     model.add(Convolution2D(nb_filters,
@@ -148,6 +122,7 @@ def build_net(training_data, width=28, height=28, verbose=False):
     if verbose == True: print(model.summary())
     return model
 
+
 def train(model, training_data, callback=True, batch_size=256, epochs=10):
     (x_train, y_train), (x_test, y_test), mapping, nb_classes = training_data
 
@@ -157,7 +132,8 @@ def train(model, training_data, callback=True, batch_size=256, epochs=10):
 
     if callback == True:
         # Callback for analysis in TensorBoard
-        tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
+        tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True,
+                                                 write_images=True)
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
@@ -175,6 +151,7 @@ def train(model, training_data, callback=True, batch_size=256, epochs=10):
     with open("bin/model.yaml", "w") as yaml_file:
         yaml_file.write(model_yaml)
     save_model(model, 'bin/model.h5')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage='A training program for classifying the EMNIST dataset')
