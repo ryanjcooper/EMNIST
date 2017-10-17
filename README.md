@@ -36,7 +36,7 @@ and add more images to it.
     # This adds an image to the training data with label '{'
     dataset.add_image([for i in range(784)], '{')
 
-    # This adds an image to the training data with label '{'
+    # This adds an image to the testing data with label '{'
     dataset.add_image([for i in range(784)], '{', test_data=True)
 
     # This saves the dataset to a .mat file with the timestamp as a part of the filename
