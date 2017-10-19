@@ -38,26 +38,36 @@ def append_datasets(arr1, arr2):
 
 
 def load_data(emnist_file_path, wlc_file_path, width=28, height=28, verbose=True):
+    wlc_training_images, wlc_training_labels = None, None
+    wlc_testing_images, wlc_testing_labels = None, None
+
     # Load .mat dataset
     emnist = loadmat(emnist_file_path)
-    wlc = loadmat(wlc_file_path)
+    wlc = None
 
-    # Load character mapping
-    mapping = {kv[0]: kv[1:][0] for kv in wlc['dataset'][0][0][2]}
+    if wlc_file_path:
+        wlc = loadmat(wlc_file_path)
+
+    mapping = {kv[0]: kv[1:][0] for kv in emnist['dataset'][0][0][2]}
+
+    if wlc_file_path:
+        mapping = {kv[0]: kv[1:][0] for kv in wlc['dataset'][0][0][2]}
+
     pickle.dump(mapping, open('bin/mapping.p', 'wb'))
 
     # Load training data
-    emnist_training_images, emnist_training_labels = extract_images_and_labels(emnist)
-    emnist_testing_images, emnist_testing_labels = extract_images_and_labels(emnist, training_data=False)
+    training_images, training_labels = extract_images_and_labels(emnist)
+    testing_images, testing_labels = extract_images_and_labels(emnist, training_data=False)
 
-    wlc_training_images, wlc_training_labels = extract_images_and_labels(wlc)
-    wlc_testing_images, wlc_testing_labels = extract_images_and_labels(wlc, training_data=False)
+    if wlc_file_path:
+        wlc_training_images, wlc_training_labels = extract_images_and_labels(wlc)
+        wlc_testing_images, wlc_testing_labels = extract_images_and_labels(wlc, training_data=False)
 
-    training_images = append_datasets(emnist_training_images, wlc_training_images)
-    training_labels = append_datasets(emnist_training_labels, wlc_training_labels)
+        training_images = append_datasets(training_images, wlc_training_images)
+        training_labels = append_datasets(training_labels, wlc_training_labels)
 
-    testing_images = append_datasets(emnist_testing_images, wlc_testing_images)
-    testing_labels = append_datasets(emnist_testing_labels, wlc_testing_labels)
+        testing_images = append_datasets(testing_images, wlc_testing_images)
+        testing_labels = append_datasets(testing_labels, wlc_testing_labels)
 
     # Reshape training data to be valid
     if verbose: _len = len(training_images)
@@ -72,6 +82,16 @@ def load_data(emnist_file_path, wlc_file_path, width=28, height=28, verbose=True
         if verbose: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1) / _len) * 100), end='\r')
         testing_images[i] = reshape(testing_images[i], width, height)
     if verbose: print('')
+
+    if wlc_file_path:
+        wlc_training_images, wlc_training_labels = extract_images_and_labels(wlc)
+        wlc_testing_images, wlc_testing_labels = extract_images_and_labels(wlc, training_data=False)
+
+        training_images = append_datasets(training_images, wlc_training_images)
+        training_labels = append_datasets(training_labels, wlc_training_labels)
+
+        testing_images = append_datasets(testing_images, wlc_testing_images)
+        testing_labels = append_datasets(testing_labels, wlc_testing_labels)
 
     # Extend the arrays to (None, 28, 28, 1)
     training_images = training_images.reshape(training_images.shape[0], height, width, 1)
@@ -159,7 +179,7 @@ def train(model, training_data, callback=True, batch_size=256, epochs=10):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage='A training program for classifying the EMNIST dataset')
     parser.add_argument('--emnist', type=str, help='Path emnist-byclass-extended.mat file data', required=True)
-    parser.add_argument('--wlc', type=str, help='Path wlc-byclass.mat file data', required=True)
+    parser.add_argument('--wlc', type=str, help='Path wlc-byclass.mat file data')
     parser.add_argument('--width', type=int, default=28, help='Width of the images')
     parser.add_argument('--height', type=int, default=28, help='Height of the images')
     parser.add_argument('--epochs', type=int, default=10, help='Number of epochs to train on')
