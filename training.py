@@ -32,11 +32,8 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     # Local functions
     def reshape(img):
         # Used to rotate images (for some reason they are transposed on read-in)
-        img.shape = (width,height)
-        img = img.T
-        img = list(img)
-        img = [item for sublist in img for item in sublist]
-        return img
+        flipped = np.fliplr(img)
+        return np.rot90(flipped)
 
     def display(img, threshold=0.5):
         # Debugging only
