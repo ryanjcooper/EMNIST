@@ -30,13 +30,10 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
 
     '''
     # Local functions
-    def reshape(img):
+    def rotate(img):
         # Used to rotate images (for some reason they are transposed on read-in)
-        img.shape = (width,height)
-        img = img.T
-        img = list(img)
-        img = [item for sublist in img for item in sublist]
-        return img
+        flipped = np.fliplr(img)
+        return np.rot90(flipped)
 
     def display(img, threshold=0.5):
         # Debugging only
@@ -60,7 +57,7 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     # Load training data
     if max_ == None:
         max_ = len(mat['dataset'][0][0][0][0][0][0])
-    training_images = mat['dataset'][0][0][0][0][0][0][:max_]
+    training_images = mat['dataset'][0][0][0][0][0][0][:max_].reshape(max_, height, width, 1)
     training_labels = mat['dataset'][0][0][0][0][0][1][:max_]
 
     # Load testing data
@@ -68,26 +65,22 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
         max_ = len(mat['dataset'][0][0][1][0][0][0])
     else:
         max_ = int(max_ / 6)
-    testing_images = mat['dataset'][0][0][1][0][0][0][:max_]
+    testing_images = mat['dataset'][0][0][1][0][0][0][:max_].reshape(max_, height, width, 1)
     testing_labels = mat['dataset'][0][0][1][0][0][1][:max_]
 
     # Reshape training data to be valid
     if verbose == True: _len = len(training_images)
     for i in range(len(training_images)):
         if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1)/_len) * 100), end='\r')
-        training_images[i] = reshape(training_images[i])
+        training_images[i] = rotate(training_images[i])
     if verbose == True: print('')
 
     # Reshape testing data to be valid
     if verbose == True: _len = len(testing_images)
     for i in range(len(testing_images)):
         if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1)/_len) * 100), end='\r')
-        testing_images[i] = reshape(testing_images[i])
+        testing_images[i] = rotate(testing_images[i])
     if verbose == True: print('')
-
-    # Extend the arrays to (None, 28, 28, 1)
-    training_images = training_images.reshape(training_images.shape[0], height, width, 1)
-    testing_images = testing_images.reshape(testing_images.shape[0], height, width, 1)
 
     # Convert type to float32
     training_images = training_images.astype('float32')
