@@ -19,7 +19,7 @@ This project was intended to explore the properties of convolution neural networ
     * See [paper](https://arxiv.org/abs/1702.05373 "EMNIST: an extension of MNIST to handwritten letters") for more info
 
 ##### Todo
-  * Update gif with new webserver
+  * Update gif with new webapp
   * Train more models
     * RCNN
     * Optimize hyperparameters

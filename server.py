@@ -100,7 +100,7 @@ def predict():
     # Generate response
     response = {'prediction': chr(mapping[(int(np.argmax(out, axis=1)[0]))]),
                 'confidence': str(max(out[0]) * 100)[:6]}
-    # response = str(response) + '\nConfidence: %s%' % str(confidence)
+
     return jsonify(response)
 
 if __name__ == '__main__':
