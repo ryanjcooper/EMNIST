@@ -21,6 +21,9 @@
 
 		<div class="centered">
 			<h1 id="result"></h1>
+		</div><br><br>
+		<div class="centered">
+			<h1 id="confidence"></h1>
 		</div>
   		<script src="{{url_for('static',filename='jquery-3.2.0.min.js')}}"></script>
 	    <script src="{{url_for('static',filename='index.js')}}"></script>
@@ -35,8 +38,9 @@
 	   				url: $SCRIPT_ROOT + "/predict/",
 	   				data: img,
 	   				success: function(data){
-	   					$('#result').text('Predicted Output: ' + data);
-	   				}
+	   					$('#result').text('Predicted Output: ' + data.prediction);
+	   					$('#confidence').text('Confidence: ' + data.confidence + '%');
+                                        }
 	   			});
 	   		});
 	   </script>

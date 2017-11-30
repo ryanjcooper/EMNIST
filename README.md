@@ -19,6 +19,7 @@ This project was intended to explore the properties of convolution neural networ
     * See [paper](https://arxiv.org/abs/1702.05373 "EMNIST: an extension of MNIST to handwritten letters") for more info
 
 ##### Todo
+  * Update gif with new webserver
   * Train more models
     * RCNN
     * Optimize hyperparameters
@@ -33,6 +34,8 @@ This project was intended to explore the properties of convolution neural networ
   * Flask
   * Numpy
   * Scipy
+
+  Note: All dependencies for current build can be found in dependencies.txt
 
 ## Usage
 #### [training.py](https://github.com/Coopss/EMNIST/blob/master/training.py)

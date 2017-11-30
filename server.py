@@ -2,7 +2,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from scipy.misc import imsave, imread, imresize
 import numpy as np
 import argparse
@@ -98,9 +98,10 @@ def predict():
     out = model.predict(x)
 
     # Generate response
-    response = chr(mapping[(int(np.argmax(out, axis=1)[0]))])
-    return response
-
+    response = {'prediction': chr(mapping[(int(np.argmax(out, axis=1)[0]))]),
+                'confidence': str(max(out[0]) * 100)[:6]}
+    # response = str(response) + '\nConfidence: %s%' % str(confidence)
+    return jsonify(response)
 
 if __name__ == '__main__':
     # Parse optional arguments
