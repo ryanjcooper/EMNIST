@@ -11,6 +11,10 @@ import re
 import base64
 import pickle
 
+import tensorflow as tf
+global graph,model
+graph = tf.get_default_graph()
+
 app = Flask(__name__)
 
 def load_model(bin_dir):
@@ -95,7 +99,9 @@ def predict():
     x /= 255
 
     # Predict from model
-    out = model.predict(x)
+    with graph.as_default():
+        out = model.predict(x)
+
 
     # Generate response
     response = {'prediction': chr(mapping[(int(np.argmax(out, axis=1)[0]))]),
