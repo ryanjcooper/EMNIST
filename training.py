@@ -143,10 +143,12 @@ def build_net(training_data, width=28, height=28, verbose=False):
 
 def train(model, training_data, callback=True, batch_size=256, epochs=10):
     (x_train, y_train), (x_test, y_test), mapping, nb_classes = training_data
-
+    print(y_train)
+    print(y_test)
+    print(nb_classes)
     # convert class vectors to binary class matrices
-    y_train = np_utils.to_categorical(y_train, nb_classes)
-    y_test = np_utils.to_categorical(y_test, nb_classes)
+    y_train = np_utils.to_categorical(y_train-1, nb_classes)
+    y_test = np_utils.to_categorical(y_test-1, nb_classes)
 
     if callback == True:
         # Callback for analysis in TensorBoard
