@@ -1,5 +1,10 @@
 # Mute tensorflow debugging information console
 import os
+from collections import defaultdict
+
+import numpy
+from numpy.random import random
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, Dropout, Dense, Flatten, LSTM
@@ -10,6 +15,7 @@ import pickle
 import argparse
 import keras
 import numpy as np
+
 
 def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     ''' Load data in from .mat file as specified by the paper.
@@ -29,6 +35,7 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
                 - ((training_images, training_labels), (testing_images, testing_labels), mapping)
 
     '''
+
     # Local functions
     def rotate(img):
         # Used to rotate images (for some reason they are transposed on read-in)
@@ -50,13 +57,18 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     # Load convoluted list structure form loadmat
     mat = loadmat(mat_file_path)
 
+    # 只提取前6个字母作为训练
+    training_types = 6
+
     # Load char mapping
-    mapping = {kv[0]:kv[1:][0] for kv in mat['dataset'][0][0][2]}
-    pickle.dump(mapping, open('bin/mapping.p', 'wb' ))
+    mapping = {kv[0]: kv[1:][0] for kv in mat['dataset'][0][0][2][0:training_types]}
+    pickle.dump(mapping, open('bin/mapping.p', 'wb'))
 
     # Load training data
     if max_ == None:
+        # max_ = 6
         max_ = len(mat['dataset'][0][0][0][0][0][0])
+
     training_images = mat['dataset'][0][0][0][0][0][0][:max_].reshape(max_, height, width, 1)
     training_labels = mat['dataset'][0][0][0][0][0][1][:max_]
 
@@ -65,20 +77,23 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
         max_ = len(mat['dataset'][0][0][1][0][0][0])
     else:
         max_ = int(max_ / 6)
+    max_ = int((max_ / 26) * training_types)
     testing_images = mat['dataset'][0][0][1][0][0][0][:max_].reshape(max_, height, width, 1)
     testing_labels = mat['dataset'][0][0][1][0][0][1][:max_]
 
     # Reshape training data to be valid
     if verbose == True: _len = len(training_images)
     for i in range(len(training_images)):
-        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1)/_len) * 100), end='\r')
+        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1) / _len) * 100),
+                                  end='\r')
         training_images[i] = rotate(training_images[i])
     if verbose == True: print('')
 
     # Reshape testing data to be valid
     if verbose == True: _len = len(testing_images)
     for i in range(len(testing_images)):
-        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1)/_len) * 100), end='\r')
+        if verbose == True: print('%d/%d (%.2lf%%)' % (i + 1, _len, ((i + 1) / _len) * 100),
+                                  end='\r')
         testing_images[i] = rotate(testing_images[i])
     if verbose == True: print('')
 
@@ -90,9 +105,47 @@ def load_data(mat_file_path, width=28, height=28, max_=None, verbose=True):
     training_images /= 255
     testing_images /= 255
 
-    nb_classes = len(mapping)
+    # 生成只含有ABCDEF的训练样本
+    new_training_images, new_training_labels = \
+        generate_new_train_data(training_images,
+                                training_labels,
+                                training_types)
 
-    return ((training_images, training_labels), (testing_images, testing_labels), mapping, nb_classes)
+    nb_classes = len(mapping)
+    return (
+        (new_training_images, new_training_labels), (testing_images, testing_labels), mapping,
+        nb_classes)
+
+
+def generate_new_train_data(training_images, training_labels, training_types):
+    trains = defaultdict(list)
+    for index, image in enumerate(training_images):
+        image_value = tuple(image)
+        index_key = int(training_labels[index])
+        if image_value and 0 < index_key <= training_types:
+            trains[index_key].append(image_value)
+        if index_key > 26:
+            print(trains[index])
+    # sorted(trains.keys())
+    print(len(trains))
+    new_training_images = []
+    new_training_labels = []
+    for k, values in trains.items():
+        for value in values:
+            new_training_images.append(value)
+            new_training_labels.append([k])
+    new_training_labels = np.array(new_training_labels, dtype=np.uint8)
+    new_training_images = np.array(new_training_images, dtype=np.float32)
+    shuffle_in_unison_scary(new_training_images, new_training_labels)
+    return new_training_images, new_training_labels
+
+
+def shuffle_in_unison_scary(a, b):
+    rng_state = numpy.random.get_state()
+    numpy.random.shuffle(a)
+    numpy.random.set_state(rng_state)
+    numpy.random.shuffle(b)
+
 
 def build_net(training_data, width=28, height=28, verbose=False):
     ''' Build and train neural network. Also offloads the net in .yaml and the
@@ -112,9 +165,9 @@ def build_net(training_data, width=28, height=28, verbose=False):
     input_shape = (height, width, 1)
 
     # Hyperparameters
-    nb_filters = 32 # number of convolutional filters to use
-    pool_size = (2, 2) # size of pooling area for max pooling
-    kernel_size = (3, 3) # convolution kernel size
+    nb_filters = 32  # number of convolutional filters to use
+    pool_size = (2, 2)  # size of pooling area for max pooling
+    kernel_size = (3, 3)  # convolution kernel size
 
     model = Sequential()
     model.add(Convolution2D(nb_filters,
@@ -141,18 +194,20 @@ def build_net(training_data, width=28, height=28, verbose=False):
     if verbose == True: print(model.summary())
     return model
 
+
 def train(model, training_data, callback=True, batch_size=256, epochs=10):
     (x_train, y_train), (x_test, y_test), mapping, nb_classes = training_data
     print(y_train)
     print(y_test)
     print(nb_classes)
     # convert class vectors to binary class matrices
-    y_train = np_utils.to_categorical(y_train-1, nb_classes)
-    y_test = np_utils.to_categorical(y_test-1, nb_classes)
+    y_train = np_utils.to_categorical(y_train - 1, nb_classes)
+    y_test = np_utils.to_categorical(y_test - 1, nb_classes)
 
     if callback == True:
         # Callback for analysis in TensorBoard
-        tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
+        tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,
+                                                 write_graph=True, write_images=True)
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
@@ -171,6 +226,7 @@ def train(model, training_data, callback=True, batch_size=256, epochs=10):
         yaml_file.write(model_yaml)
     save_model(model, 'bin/model.h5')
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage='A training program for classifying the EMNIST dataset')
     parser.add_argument('-f', '--file', type=str, help='Path .mat file data', required=True)
@@ -178,13 +234,15 @@ if __name__ == '__main__':
     parser.add_argument('--height', type=int, default=28, help='Height of the images')
     parser.add_argument('--max', type=int, default=None, help='Max amount of data to use')
     parser.add_argument('--epochs', type=int, default=10, help='Number of epochs to train on')
-    parser.add_argument('--verbose', action='store_true', default=False, help='Enables verbose printing')
+    parser.add_argument('--verbose', action='store_true', default=False,
+                        help='Enables verbose printing')
     args = parser.parse_args()
 
     bin_dir = os.path.dirname(os.path.realpath(__file__)) + '/bin'
     if not os.path.exists(bin_dir):
         os.makedirs(bin_dir)
 
-    training_data = load_data(args.file, width=args.width, height=args.height, max_=args.max, verbose=args.verbose)
+    training_data = load_data(args.file, width=args.width, height=args.height, max_=args.max,
+                              verbose=args.verbose)
     model = build_net(training_data, width=args.width, height=args.height, verbose=args.verbose)
     train(model, training_data, epochs=args.epochs)

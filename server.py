@@ -107,7 +107,7 @@ def predict():
     print(str(np.argmax(out, axis=1)[:]))
     print(str(mapping))
     # Generate response
-    response = {'prediction': chr(mapping[(int(np.argmax(out, axis=1)[0])+1)]),
+    response = {'prediction': chr(mapping[(int(np.argmax(out, axis=1)[0]))]),
                 'confidence': str(max(out[0]) * 100)[:6]}
 
     return jsonify(response)
