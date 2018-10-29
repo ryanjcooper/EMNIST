@@ -2,21 +2,21 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Handwritten Digit Recognition using Convolutional Neural Networks</title>
-  <title>@rcooper // github @coopss </title>
+	<title>使用卷积神经网络（ Convolutional Neural Networks ）实现的手写字母识别</title>
+  <title> </title>
 	<link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
 </head>
 
 <body>
-		<h1>Alphanumeric Character Recognition using a 2-D Convolutional Neural Network</h1>
+		<h1>  使用卷积神经网络（2-D Convolutional Neural Networks ）实现的手写字母识别 </h1>
 
 		<div class="centered">
 			<canvas id="canvas" width="280" height="280"></canvas>
 		</div>
 
 		<div class="centered">
-			<input type="button" class="predict_button" value="Predict" style="">
-			<input type="button" id="clear_button" value="Clear" style="">
+			<input type="button" class="predict_button" value="预测" style="">
+			<input type="button" id="clear_button" value="清空" style="">
 		</div>
 
 		<div class="centered">
@@ -29,7 +29,7 @@
 	    <script src="{{url_for('static',filename='index.js')}}"></script>
 	    <script type="text/javascript">
 	   		$(".predict_button").click(function(){
-	   			$('#result').text('  Predicting...');
+	   			$('#result').text('  预测中...');
 	   			var $SCRIPT_ROOT = {{request.script_root|tojson|safe}};
 	   			var canvasObj = document.getElementById("canvas");
 	   			var img = canvasObj.toDataURL('image/png');
@@ -38,8 +38,8 @@
 	   				url: $SCRIPT_ROOT + "/predict/",
 	   				data: img,
 	   				success: function(data){
-	   					$('#result').text('Predicted Output: ' + data.prediction);
-	   					$('#confidence').text('Confidence: ' + data.confidence + '%');
+	   					$('#result').text('预测结果: ' + data.prediction);
+	   					$('#confidence').text('置信度: ' + data.confidence + '%');
                                         }
 	   			});
 	   		});
