@@ -107,7 +107,7 @@ if __name__ == '__main__':
     # Parse optional arguments
     parser = argparse.ArgumentParser(description='A webapp for testing models generated from training.py on the EMNIST dataset')
     parser.add_argument('--bin', type=str, default='bin', help='Directory to the bin containing the model yaml and model h5 files')
-    parser.add_argument('--host', type=str, default='0.0.0.0', help='The host to run the flask server on')
+    parser.add_argument('--host', type=str, default='127.0.0.1', help='The host to run the flask server on')
     parser.add_argument('--port', type=int, default=5000, help='The port to run the flask server on')
     args = parser.parse_args()
 
